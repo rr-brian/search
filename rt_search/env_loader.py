@@ -5,40 +5,52 @@ from dotenv import load_dotenv
 from typing import Dict
 
 def load_env() -> Dict[str, str]:
-    """Load environment variables from .env file or environment
-    Returns:
-        Dict[str, str]: Dictionary of required variables
-    """
+    """Load environment variables."""
     logger = logging.getLogger(__name__)
     logger.info('Loading environment variables...')
-
-    # Define required variables and their descriptions
+    
+    # Required environment variables
     required_vars = {
-        "AZURE_OPENAI_ENDPOINT": "Azure OpenAI endpoint",
-        "AZURE_OPENAI_DEPLOYMENT": "Azure OpenAI deployment name",
-        "AZURE_OPENAI_CREDENTIAL": "Azure OpenAI credential",
-        "AZURE_AI_SEARCH_ENDPOINT": "Azure AI Search endpoint",
-        "AZURE_AI_SEARCH_INDEX": "Azure AI Search index name",
-        "AZURE_AI_SEARCH_CREDENTIAL": "Azure AI Search credential"
+        'AZURE_OPENAI_ENDPOINT': 'Azure OpenAI endpoint',
+        'AZURE_OPENAI_DEPLOYMENT': 'Azure OpenAI deployment name',
+        'AZURE_OPENAI_API_KEY': 'Azure OpenAI credential',
+        'AZURE_AI_SEARCH_ENDPOINT': 'Azure AI Search endpoint',
+        'AZURE_AI_SEARCH_INDEX': 'Azure AI Search index name',
+        'AZURE_AI_SEARCH_API_KEY': 'Azure AI Search credential'
     }
-
-    # Check if required variables are already set
+    
+    # Check for missing variables
+    missing = []
     env_vars = {}
-    missing_vars = []
-    for var in required_vars:
+    
+    # Load each variable
+    for var, desc in required_vars.items():
         value = os.getenv(var)
-        if value:
-            env_vars[var] = value
-            # Log securely - don't show actual values for sensitive variables
-            if any(s in var.lower() for s in ['key', 'secret', 'password', 'token']):
+        if not value:
+            missing.append(f'{var} ({desc})')
+        else:
+            # Log variable found (without revealing sensitive values)
+            if 'KEY' in var or 'CREDENTIAL' in var:
                 logger.info(f'Found {var} in environment [value hidden]')
+                logger.debug(f'{var} length: {len(value)}')
             else:
                 logger.info(f'Found {var} in environment: {value}')
-        else:
-            missing_vars.append(var)
+            env_vars[var] = value
+    
+    if missing:
+        error = f'Missing required environment variables: {", ".join(missing)}'
+        logger.error(error)
+        raise ValueError(error)
+    
+    # Log summary
+    logger.info('Environment variables loaded successfully:')
+    logger.info(f'OpenAI endpoint: {env_vars.get("AZURE_OPENAI_ENDPOINT", "[missing]")}')
+    logger.info(f'OpenAI deployment: {env_vars.get("AZURE_OPENAI_DEPLOYMENT", "[missing]")}')
+    logger.info(f'Search endpoint: {env_vars.get("AZURE_AI_SEARCH_ENDPOINT", "[missing]")}')
+    logger.info(f'Search index: {env_vars.get("AZURE_AI_SEARCH_INDEX", "[missing]")}')
 
     # If any variables are missing, try to load from .env file
-    if missing_vars:
+    if missing:
         logger.info('Some environment variables are missing, attempting to load from .env file...')
         try:
             # Find .env file

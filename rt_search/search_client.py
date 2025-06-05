@@ -15,29 +15,40 @@ class SearchClient:
         # Get required variables
         required_vars = get_required_search_vars()
         
+        # Log configuration (safely)
+        logger.info('Search configuration:')
+        logger.info(f'Search endpoint: {required_vars["AZURE_AI_SEARCH_ENDPOINT"]}')
+        logger.info(f'Search index: {required_vars["AZURE_AI_SEARCH_INDEX"]}')
+        logger.info(f'OpenAI endpoint: {required_vars["AZURE_OPENAI_ENDPOINT"]}')
+        logger.info(f'OpenAI deployment: {required_vars["AZURE_OPENAI_DEPLOYMENT"]}')
+        
         # Initialize Cognitive Search client
-        self.search_client = CognitiveSearchClient(
+        logger.info('Initializing Cognitive Search client...')
+        self.cognitive_search_client = CognitiveSearchClient(
             endpoint=required_vars['AZURE_AI_SEARCH_ENDPOINT'],
             index_name=required_vars['AZURE_AI_SEARCH_INDEX'],
-            credential=required_vars['AZURE_AI_SEARCH_CREDENTIAL']
+            api_key=required_vars['AZURE_AI_SEARCH_API_KEY']
         )
         
         # Initialize OpenAI client
+        logger.info('Initializing OpenAI client...')
         self.openai_client = OpenAIClient(
             endpoint=required_vars['AZURE_OPENAI_ENDPOINT'],
-            credential=required_vars['AZURE_OPENAI_CREDENTIAL'],
-            deployment=required_vars['AZURE_OPENAI_DEPLOYMENT']
+            deployment=required_vars['AZURE_OPENAI_DEPLOYMENT'],
+            api_key=required_vars['AZURE_OPENAI_API_KEY']
         )
+        
+        logger.info('SearchClient initialization complete')
             
     def search_contract_language(self, query: str) -> Union[Dict, List[Dict]]:
         """Search for contract language and get OpenAI completion"""
         try:
             # Execute search
-            search_results = self.search_client.search(query)
+            search_results = self.cognitive_search_client.search(query)
             
             if not search_results:
                 logger.warning('No search results found')
-                return {'error': 'No results found'}
+                return []
             
             # Extract content from results
             content = []

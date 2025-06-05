@@ -5,16 +5,16 @@ from openai import AzureOpenAI
 logger = logging.getLogger(__name__)
 
 class OpenAIClient:
-    def __init__(self, endpoint: str, credential: str, deployment: str):
+    def __init__(self, endpoint: str, deployment: str, api_key: str):
         """Initialize the OpenAI client"""
         self.endpoint = endpoint
         self.deployment = deployment
-        self._auth = credential
+        self.api_key = api_key
 
         # Initialize Azure OpenAI client
         self.client = AzureOpenAI(
             azure_endpoint=self.endpoint,
-            api_key=self._auth,
+            api_key=self.api_key,
             api_version='2024-02-15-preview'
         )
 
