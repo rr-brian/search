@@ -49,6 +49,16 @@ jobs:
         app-settings-json: |
           [
             {
+              "name": "FLASK_ENV",
+              "value": "production",
+              "slotSetting": false
+            },
+            {
+              "name": "FLASK_DEBUG",
+              "value": "0",
+              "slotSetting": false
+            },
+            {
               "name": "AZURE_OPENAI_ENDPOINT",
               "value": "${{ secrets.AZURE_OPENAI_ENDPOINT }}",
               "slotSetting": false
