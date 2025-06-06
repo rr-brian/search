@@ -41,3 +41,51 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+    - name: Configure App Settings
+      uses: azure/appservice-settings@v1
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        app-settings-json: |
+          [
+            {
+              "name": "AZURE_OPENAI_ENDPOINT",
+              "value": "${{ secrets.AZURE_OPENAI_ENDPOINT }}",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_OPENAI_DEPLOYMENT",
+              "value": "${{ secrets.AZURE_OPENAI_DEPLOYMENT }}",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_OPENAI_API_KEY",
+              "value": "${{ secrets.AZURE_OPENAI_API_KEY }}",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_AI_SEARCH_ENDPOINT",
+              "value": "${{ secrets.AZURE_AI_SEARCH_ENDPOINT }}",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_AI_SEARCH_INDEX",
+              "value": "${{ secrets.AZURE_AI_SEARCH_INDEX }}",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_AI_SEARCH_API_KEY",
+              "value": "${{ secrets.AZURE_AI_SEARCH_API_KEY }}",
+              "slotSetting": false
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true",
+              "slotSetting": false
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1",
+              "slotSetting": false
+            }
+          ]
