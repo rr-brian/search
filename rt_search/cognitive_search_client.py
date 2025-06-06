@@ -6,12 +6,60 @@ from typing import Dict, List
 logger = logging.getLogger(__name__)
 
 class CognitiveSearchClient:
+    """Azure Cognitive Search client"""
+    
     def __init__(self, endpoint: str, index_name: str, api_key: str):
-        """Initialize the search client"""
+        """Initialize the client
+        
+        Args:
+            endpoint (str): Azure Cognitive Search endpoint
+            index_name (str): Name of the search index
+            api_key (str): API key for authentication
+        """
         self.endpoint = endpoint.rstrip('/')
         self.index_name = index_name
         self._auth = api_key
         self.api_version = '2023-07-01-Preview'
+        
+        # Inspect index on initialization
+        self.inspect_index()
+        
+    def inspect_index(self):
+        """Inspect the search index to understand its schema"""
+        try:
+            # Get index definition
+            index_url = f"{self.endpoint}/indexes/{self.index_name}?api-version={self.api_version}"
+            response = requests.get(
+                index_url,
+                headers={
+                    'Content-Type': 'application/json',
+                    'api-key': self._auth
+                }
+            )
+            
+            if response.status_code == 200:
+                index_def = response.json()
+                logger.info('Index schema:')
+                logger.info(f'Index name: {index_def.get("name")}')
+                
+                # Log field information
+                fields = index_def.get('fields', [])
+                logger.info(f'Found {len(fields)} fields:')
+                for field in fields:
+                    logger.info(f'  - {field.get("name")}: {field.get("type")} '
+                              f'(searchable: {field.get("searchable", False)}, '
+                              f'retrievable: {field.get("retrievable", False)})')
+                
+                # Store searchable fields for later use
+                self.searchable_fields = [f['name'] for f in fields if f.get('searchable', False)]
+                logger.info(f'Searchable fields: {self.searchable_fields}')
+                
+            else:
+                logger.error(f'Failed to get index definition: {response.status_code}')
+                logger.error(f'Response: {response.text}')
+                
+        except Exception as e:
+            logger.error(f'Error inspecting index: {str(e)}')
 
     def search(self, query: str) -> List[Dict]:
         """Execute a search query"""
@@ -22,17 +70,30 @@ class CognitiveSearchClient:
         logger.info(f'Search URL: {search_url}')
         logger.info(f'Index name: {self.index_name}')
         
-        # Prepare search body
+        # Clean and process the query
+        cleaned_query = query.strip()
+        logger.info(f'Original query: {query}')
+        logger.info(f'Cleaned query: {cleaned_query}')
+        
+        # Prepare search body with discovered fields
         search_body = {
-            'search': query,
+            'search': cleaned_query,
             'queryType': 'simple',
-            'top': 5,
+            'top': 50,
             'select': '*',
-            'searchFields': 'content',
-            'searchMode': 'all',
+            'searchFields': ','.join(self.searchable_fields) if hasattr(self, 'searchable_fields') else 'content',
+            'searchMode': 'any',
             'count': True,
-            'orderby': 'search.score() desc'
+            'orderby': 'search.score() desc',
+            'highlight': ','.join(self.searchable_fields) if hasattr(self, 'searchable_fields') else 'content',
+            'highlightPreTag': '<mark>',
+            'highlightPostTag': '</mark>'
         }
+        
+        # Log search configuration
+        logger.info('Search configuration:')
+        for key, value in search_body.items():
+            logger.info(f'  {key}: {value}')
         logger.info(f'Search body: {search_body}')
         
         try:
@@ -103,15 +164,26 @@ class CognitiveSearchClient:
                     context = str(item.get('context', ''))
                     score = item.get('@search.score', 0)
                     
+                    # Get highlights if available
+                    highlights = item.get('@search.highlights', {})
+                    highlighted_content = highlights.get('content', [content])[0] if highlights else content
+                    
+                    # Get semantic details if available
+                    captions = item.get('@search.captions', [])
+                    caption = captions[0].get('text') if captions else ''
+                    
                     # Log field details
                     logger.info(f'Result {idx + 1} content length: {len(content)}')
                     logger.info(f'Result {idx + 1} context length: {len(context)}')
                     logger.info(f'Result {idx + 1} score: {score}')
+                    logger.info(f'Result {idx + 1} has highlights: {bool(highlights)}')
+                    logger.info(f'Result {idx + 1} has caption: {bool(caption)}')
                     
                     result = {
-                        'content': content,
+                        'content': highlighted_content,
                         'context': context,
-                        'relevance': float(score)
+                        'relevance': float(score),
+                        'summary': caption or context[:200] + '...' if context else ''
                     }
                     transformed.append(result)
                     
