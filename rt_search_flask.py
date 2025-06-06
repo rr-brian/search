@@ -27,17 +27,37 @@ def add_header(response):
 def root():
     return app.send_static_file('index.html')
 
-# Load environment variables
-load_env()
+# Global search client
+search_client = None
 
-# Initialize search client
-search_client = SearchClient()
+def init_app():
+    """Initialize the application."""
+    global search_client
+    try:
+        # Load environment variables
+        logger.info('Loading environment variables...')
+        load_env()
+        
+        # Initialize search client
+        logger.info('Initializing search client...')
+        search_client = SearchClient()
+        logger.info('Application initialized successfully')
+    except Exception as e:
+        logger.error(f'Failed to initialize application: {str(e)}')
+        logger.exception('Full traceback:')
+        raise
+
+# Initialize the app
+init_app()
 
 @app.route('/api/search', methods=['POST'])
 def search():
     """Handle search requests."""
     logger.info('Received search request')
     try:
+        if search_client is None:
+            logger.error('Search client not initialized')
+            return jsonify({'error': 'Application not properly initialized'}), 500
         # Get query from request
         logger.info(f'Request data: {request.data}')
         data = request.get_json()
