@@ -71,10 +71,13 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: "6ecd6944-a942-4acc-8ae7-ce35b5c6e94c"
-          auth-type: "IDENTITY"
+          creds: |
+            {
+              "clientId": "b0f986d6-8183-41e9-ae6a-8ace777aed66",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "6ecd6944-a942-4acc-8ae7-ce35b5c6e94c",
+              "tenantId": "99848873-e61d-44cc-9862-d05151c567ab"
+            }
 
       - name: Stop Web App
         uses: azure/cli@v1
