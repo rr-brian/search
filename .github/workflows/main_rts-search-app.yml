@@ -11,8 +11,9 @@ on:
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.11.7'
   AZURE_WEBAPP_NAME: rts-search-app
+  PYTHON_PACKAGE_VERSION: '3.11'
 
 jobs:
   build:
@@ -81,11 +82,18 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_24F9FC05C50D4C6691A32CE468A69965 }}
 
       - name: Configure Azure Web App
-        run: |
-          az webapp config set --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --resource-group rts_innovate \
-            --linux-fx-version "PYTHON|${{ env.PYTHON_VERSION }}" \
-            --startup-file "app_start.sh"
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az webapp config set \
+              --name ${{ env.AZURE_WEBAPP_NAME }} \
+              --resource-group rts_innovate \
+              --linux-fx-version "PYTHON|${{ env.PYTHON_PACKAGE_VERSION }}" \
+              --startup-file "app_start.sh"
+            az webapp config appsettings set \
+              --name ${{ env.AZURE_WEBAPP_NAME }} \
+              --resource-group rts_innovate \
+              --settings PYTHON_VERSION=${{ env.PYTHON_VERSION }} SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
