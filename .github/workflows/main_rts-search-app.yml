@@ -65,13 +65,9 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set Azure subscription
-        uses: azure/cli@v1
-        with:
-          inlineScript: |
-            az account set --subscription "rts_innovate"
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: "rts_innovate"
 
       - name: Stop Web App
         uses: azure/cli@v1
