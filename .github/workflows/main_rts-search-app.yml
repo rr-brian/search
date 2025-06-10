@@ -95,9 +95,23 @@ jobs:
               --resource-group rts_innovate \
               --settings PYTHON_VERSION=${{ env.PYTHON_VERSION }} SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
+      - name: Stop Web App
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az webapp stop --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group rts_innovate
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: .
+          clean: true
+          restart: true
+
+      - name: Start Web App
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az webapp start --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group rts_innovate
