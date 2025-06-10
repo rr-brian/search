@@ -19,9 +19,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
       id-token: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -55,6 +54,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      id-token: write
+      contents: read
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
@@ -72,7 +74,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: "6ecd6944-a942-4acc-8ae7-ce35b5c6e94c"
-          enable-AzPSSession: true
+          auth-type: "IDENTITY"
 
       - name: Stop Web App
         uses: azure/cli@v1
