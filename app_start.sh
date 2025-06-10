@@ -1,14 +1,25 @@
 #!/bin/bash
 
-# Enable error handling
-set -e
+# Enable error handling and debugging
+set -ex
 
-# Debug: Show current directory and list files
+# Debug: Show environment
+echo "Python version:"
+python --version
+echo "Pip version:"
+pip --version
+
+# Set environment variables
+export PORT=${PORT:-8000}
+export PYTHONUNBUFFERED=1
+export PYTHONDONTWRITEBYTECODE=1
+
+# Debug: Show current state
 echo "Current directory: $(pwd)"
 echo "Directory contents:"
 ls -la
 
-# Find the correct directory
+# Navigate to application directory
 if [ -d "/home/site/wwwroot" ]; then
     cd /home/site/wwwroot
 else
@@ -19,32 +30,35 @@ echo "Working directory: $(pwd)"
 echo "Directory contents after cd:"
 ls -la
 
-# Set environment variables
-export PORT=${PORT:-8000}
-export PYTHONPATH=$(pwd):${PYTHONPATH}
-export WEBSITE_HOSTNAME=${WEBSITE_HOSTNAME:-localhost:8000}
+# Create and activate virtual environment
+echo "Setting up virtual environment..."
+python -m venv antenv
+source antenv/bin/activate
 
-# Verify requirements.txt exists
-if [ ! -f "requirements.txt" ]; then
-    echo "Error: requirements.txt not found in $(pwd)"
-    exit 1
-fi
-
-# Install dependencies
+# Upgrade pip and install dependencies
 echo "Installing dependencies..."
 python -m pip install --upgrade pip setuptools wheel
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 
-# Verify gunicorn.conf.py exists
+# Verify gunicorn installation
+if ! command -v gunicorn &> /dev/null; then
+    echo "Gunicorn not found, installing..."
+    pip install gunicorn
+fi
+
+# Create gunicorn config if it doesn't exist
 if [ ! -f "gunicorn.conf.py" ]; then
-    echo "Warning: gunicorn.conf.py not found, creating default configuration"
+    echo "Creating gunicorn configuration..."
     cat > gunicorn.conf.py << EOL
+import multiprocessing
+
 bind = "0.0.0.0:${PORT}"
-workers = 2
-threads = 2
-timeout = 300
-keepalive = 2
+workers = multiprocessing.cpu_count() * 2 + 1
+threads = 4
+timeout = 600
+keepalive = 5
 worker_class = "sync"
+worker_tmp_dir = "/dev/shm"
 loglevel = "info"
 accesslog = "-"
 errorlog = "-"
@@ -53,6 +67,6 @@ enable_stdio_inheritance = True
 EOL
 fi
 
-# Start Gunicorn
-echo "Starting Gunicorn..."
+# Start Gunicorn with debugging information
+echo "Starting Gunicorn on port ${PORT}..."
 exec gunicorn -c gunicorn.conf.py wsgi:app
