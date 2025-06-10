@@ -24,8 +24,9 @@ class CognitiveSearchClient(SearchOperations):
         logger.info('Initializing OpenAI client...')
         self.openai_client = AzureOpenAI(
             api_key=os.getenv('AZURE_OPENAI_API_KEY'),
-            api_version=os.getenv('AZURE_OPENAI_API_VERSION', '2023-05-15'),  # Default to 2023-05-15
-            azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT')
+            api_version=os.getenv('AZURE_OPENAI_API_VERSION', '2023-05-15'),
+            azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
+            default_headers={'User-Agent': 'rt-search/1.0.0'}
         )
         logger.info('SearchClient initialization complete')
 
