@@ -92,7 +92,15 @@ jobs:
                 PYTHON_VERSION=${{ env.PYTHON_VERSION }} \
                 WEBSITES_PORT=8000 \
                 SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-                ENABLE_ORYX_BUILD=true
+                ENABLE_ORYX_BUILD=true \
+                AZURE_COGNITIVE_SERVICES_RESOURCE=${{ secrets.AZURE_COGNITIVE_SERVICES_RESOURCE }} \
+                AZURE_AI_SEARCH_ENDPOINT=${{ secrets.AZURE_AI_SEARCH_ENDPOINT }} \
+                AZURE_AI_SEARCH_INDEX=${{ secrets.AZURE_AI_SEARCH_INDEX }} \
+                AZURE_AI_SEARCH_API_KEY=${{ secrets.AZURE_AI_SEARCH_API_KEY }} \
+                AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }} \
+                AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }} \
+                AZURE_OPENAI_DEPLOYMENT=${{ secrets.AZURE_OPENAI_DEPLOYMENT }} \
+                FLASK_ENV=production
       - name: Stop Web App
         uses: azure/cli@v1
         with:
