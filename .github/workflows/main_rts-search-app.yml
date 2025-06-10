@@ -73,7 +73,7 @@ jobs:
         with:
           creds: |
             {
-              "clientId": "b0f986d6-8183-41e9-ae6a-8ace777aed66",
+              "clientId": "29b1ee8b-d905-40b3-a363-1c172a1837e9",
               "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
               "subscriptionId": "6ecd6944-a942-4acc-8ae7-ce35b5c6e94c",
               "tenantId": "99848873-e61d-44cc-9862-d05151c567ab"
