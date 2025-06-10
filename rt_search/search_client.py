@@ -60,16 +60,27 @@ class SearchClient:
             context = '\n'.join(content)
             completion = self.openai_client.get_completion(query, context)
             
-            # Return formatted results
-            return [
-                {
+            # Return formatted results with all fields
+            formatted_results = []
+            for idx, result in enumerate(search_results):
+                # Start with all fields from the result
+                formatted_result = dict(result)
+                
+                # Add or update specific fields
+                formatted_result.update({
                     'content': result.get('content', ''),
                     'context': result.get('context', ''),
                     'relevance': result.get('@search.score', 0),
-                    'summary': completion if idx == 0 else ''
-                }
-                for idx, result in enumerate(search_results)
-            ]
+                    'summary': completion if idx == 0 else '',
+                    'filepath': result.get('filepath', ''),
+                    'metadata_storage_path': result.get('metadata_storage_path', ''),
+                    'metadata_storage_name': result.get('metadata_storage_name', ''),
+                    'url': result.get('url', '')
+                })
+                
+                formatted_results.append(formatted_result)
+            
+            return formatted_results
             
         except Exception as e:
             logger.error(f'Search failed: {str(e)}')
